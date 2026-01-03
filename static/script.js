@@ -1,4 +1,4 @@
-// Shopping Cart using Singly Linked List with Auto-Complete and Visualization
+// Shopping Cart with BST Category Browser
 
 // Node class for linked list
 class Node {
@@ -17,7 +17,6 @@ class ShoppingCart {
 
     addItem(product) {
         const newNode = new Node(product);
-        
         if (!this.head) {
             this.head = newNode;
         } else {
@@ -33,13 +32,11 @@ class ShoppingCart {
 
     deleteItem(productId) {
         if (!this.head) return false;
-
         if (this.head.product.id === productId) {
             this.head = this.head.next;
             this.size--;
             return true;
         }
-
         let current = this.head;
         while (current.next) {
             if (current.next.product.id === productId) {
@@ -88,17 +85,14 @@ class ShoppingCart {
     calculateTotals() {
         let subtotal = 0;
         let current = this.head;
-        
         while (current) {
             subtotal += current.product.price * current.product.quantity;
             current = current.next;
         }
-
         const shipping = subtotal > 0 ? (subtotal > 1000 ? 0 : 100) : 0;
         const tax = subtotal * 0.05;
         const discount = subtotal * 0.10;
         const total = subtotal + shipping + tax - discount;
-
         return {
             subtotal: subtotal.toFixed(2),
             shipping: shipping.toFixed(2),
@@ -106,6 +100,47 @@ class ShoppingCart {
             discount: discount.toFixed(2),
             total: total.toFixed(2)
         };
+    }
+}
+
+// BST Node class
+class BSTNode {
+    constructor(product) {
+        this.product = product;
+        this.left = null;
+        this.right = null;
+    }
+}
+
+// Binary Search Tree class
+class ProductBST {
+    constructor() {
+        this.root = null;
+    }
+
+    insert(product) {
+        const newNode = new BSTNode(product);
+        if (!this.root) {
+            this.root = newNode;
+            return;
+        }
+        this._insertNode(this.root, newNode);
+    }
+
+    _insertNode(node, newNode) {
+        if (newNode.product.price < node.product.price) {
+            if (node.left === null) {
+                node.left = newNode;
+            } else {
+                this._insertNode(node.left, newNode);
+            }
+        } else {
+            if (node.right === null) {
+                node.right = newNode;
+            } else {
+                this._insertNode(node.right, newNode);
+            }
+        }
     }
 }
 
@@ -119,9 +154,7 @@ function showPage(pageName) {
     document.getElementById('homePage').style.display = 'none';
     document.getElementById('cartPage').style.display = 'none';
     document.getElementById('aboutPage').style.display = 'none';
-    
     document.getElementById(pageName + 'Page').style.display = 'block';
-    
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
         if (link.getAttribute('data-page') === pageName) {
@@ -131,6 +164,164 @@ function showPage(pageName) {
 }
 
 function navigateToCart() {
+    showPage('cart');
+}
+
+// Get unique categories from database
+function getCategories() {
+    const categoryMap = new Map();
+    foodDatabase.forEach(item => {
+        if (!categoryMap.has(item.category)) {
+            categoryMap.set(item.category, []);
+        }
+        categoryMap.get(item.category).push(item);
+    });
+    return categoryMap;
+}
+
+// Get category emoji
+function getCategoryEmoji(category) {
+    const emojiMap = {
+        'Fruits': '🍎',
+        'Vegetables': '🥕',
+        'Dairy': '🥛',
+        'Dals': '🌾',
+        'Chips': '🥔',
+        'Cookies': '🍪',
+        'Chocolates': '🍫',
+        'Cereals': '🥣'
+    };
+    return emojiMap[category] || '🛒';
+}
+
+// Open category selection modal
+function openCategoryModal() {
+    const modal = document.getElementById('categoryModal');
+    const categoryGrid = document.getElementById('categoryGrid');
+    const categories = getCategories();
+    
+    categoryGrid.innerHTML = '';
+    categories.forEach((products, categoryName) => {
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        card.innerHTML = `
+            <div class="category-icon">${getCategoryEmoji(categoryName)}</div>
+            <div class="category-name">${categoryName}</div>
+            <div class="category-count">${products.length} items</div>
+        `;
+        card.addEventListener('click', () => {
+            openBSTModal(categoryName, products);
+            closeCategoryModal();
+        });
+        categoryGrid.appendChild(card);
+    });
+    
+    modal.classList.add('show');
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('show');
+}
+
+// Build BST and visualize
+function openBSTModal(categoryName, products) {
+    const modal = document.getElementById('bstModal');
+    const container = document.getElementById('bstVisualization');
+    document.getElementById('bstCategoryName').textContent = categoryName;
+    
+    // Build BST
+    const bst = new ProductBST();
+    products.forEach(product => bst.insert(product));
+    
+    // Visualize BST
+    if (!bst.root) {
+        container.innerHTML = `
+            <div class="bst-empty">
+                <i class="fas fa-box-open"></i>
+                <p>No products in this category</p>
+            </div>
+        `;
+    } else {
+        container.innerHTML = '';
+        const treeDiv = document.createElement('div');
+        treeDiv.className = 'bst-tree';
+        renderBSTNode(bst.root, treeDiv, 0, null);
+        container.appendChild(treeDiv);
+    }
+    
+    modal.classList.add('show');
+}
+
+function closeBSTModal() {
+    document.getElementById('bstModal').classList.remove('show');
+}
+
+// Render BST using level-order traversal
+function renderBSTNode(root, container, level, position) {
+    if (!root) return;
+
+    const levels = [];
+    const queue = [{node: root, level: 0, position: 'root'}];
+    
+    while (queue.length > 0) {
+        const {node, level, position} = queue.shift();
+        
+        if (!levels[level]) {
+            levels[level] = [];
+        }
+        
+        levels[level].push({node, position});
+        
+        if (node.left) {
+            queue.push({node: node.left, level: level + 1, position: 'left'});
+        }
+        if (node.right) {
+            queue.push({node: node.right, level: level + 1, position: 'right'});
+        }
+    }
+    
+    // Render each level
+    levels.forEach((levelNodes, levelIndex) => {
+        const levelDiv = document.createElement('div');
+        levelDiv.className = 'bst-level';
+        levelDiv.style.marginBottom = '4rem';
+        
+        levelNodes.forEach(({node, position}) => {
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = `bst-node ${position}`;
+            nodeDiv.style.margin = '0 1.5rem';
+            nodeDiv.innerHTML = `
+                <div class="bst-node-emoji">${node.product.emoji}</div>
+                <div class="bst-node-name">${node.product.name}</div>
+                <div class="bst-node-price">₹${node.product.price}</div>
+            `;
+            
+            nodeDiv.addEventListener('click', () => {
+                addProductFromBST(node.product);
+            });
+            
+            levelDiv.appendChild(nodeDiv);
+        });
+        
+        container.appendChild(levelDiv);
+    });
+}
+
+// Add product from BST
+function addProductFromBST(dbProduct) {
+    const product = {
+        id: productIdCounter++,
+        name: dbProduct.name,
+        price: dbProduct.price,
+        quantity: 1,
+        emoji: dbProduct.emoji,
+        category: dbProduct.category
+    };
+    
+    cart.addItem(product);
+    renderCart();
+    showToast(`✅ ${dbProduct.name} added to cart!`);
+    closeBSTModal();
     showPage('cart');
 }
 
@@ -154,7 +345,6 @@ function setupAutoComplete() {
             return;
         }
 
-        // Filter items from database
         const matches = foodDatabase.filter(item => 
             item.name.toLowerCase().includes(searchTerm)
         ).slice(0, 8);
@@ -184,7 +374,6 @@ function setupAutoComplete() {
         }
     });
 
-    // Keyboard navigation
     productNameInput.addEventListener('keydown', function(e) {
         const items = autocompleteContainer.querySelectorAll('.autocomplete-item');
         
@@ -207,7 +396,6 @@ function setupAutoComplete() {
         }
     });
 
-    // Close autocomplete when clicking outside
     document.addEventListener('click', function(e) {
         if (!productNameInput.contains(e.target) && !autocompleteContainer.contains(e.target)) {
             autocompleteContainer.style.display = 'none';
@@ -232,31 +420,25 @@ function selectProduct(item) {
     document.getElementById('productPrice').value = item.price;
     document.getElementById('autocompleteContainer').style.display = 'none';
     selectedProductIndex = -1;
-    
     document.getElementById('productQuantity').focus();
 }
 
-// Check if product exists in database
 function isProductInDatabase(productName) {
     return foodDatabase.some(item => 
         item.name.toLowerCase() === productName.toLowerCase()
     );
 }
 
-// Show toast notification
 function showToast(message, duration = 3000) {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
-    
     toastMessage.textContent = message;
     toast.classList.add('show');
-    
     setTimeout(() => {
         toast.classList.remove('show');
     }, duration);
 }
 
-// Render cart items
 function renderCart() {
     const cartItemsContainer = document.getElementById('cartItems');
     const items = cart.getAllItems();
@@ -276,9 +458,7 @@ function renderCart() {
     cartItemsContainer.innerHTML = items.map(item => `
         <div class="cart-item" data-id="${item.id}">
             <div class="product-info col-product">
-                <div class="product-image">
-                    ${item.emoji}
-                </div>
+                <div class="product-image">${item.emoji || '🛒'}</div>
                 <div class="product-details">
                     <h4>${item.name}</h4>
                     <p>${item.category} • ID: #${item.id}</p>
@@ -308,7 +488,6 @@ function renderCart() {
     updateSummary();
 }
 
-// Update order summary
 function updateSummary() {
     const totals = cart.calculateTotals();
     const size = cart.getSize();
@@ -327,7 +506,6 @@ function updateSummary() {
     }
 }
 
-// Visualize Linked List
 function visualizeLinkedList() {
     const container = document.getElementById('linkedListVisualization');
     const items = cart.getAllItems();
@@ -349,7 +527,7 @@ function visualizeLinkedList() {
         html += `
             <div class="ll-node">
                 <div class="node-box">
-                    <div class="node-emoji">${item.emoji}</div>
+                    <div class="node-emoji">${item.emoji || '🛒'}</div>
                     <div class="node-data">
                         <div class="node-name">${item.name}</div>
                         <div class="node-info">
@@ -382,7 +560,6 @@ function visualizeLinkedList() {
     container.innerHTML = html;
 }
 
-// Add item to cart with validation
 document.getElementById('addItemForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -395,14 +572,12 @@ document.getElementById('addItemForm').addEventListener('submit', (e) => {
         return;
     }
 
-    // Validate if product exists in database
     if (!isProductInDatabase(name)) {
         showToast('❌ This item is not available in our store!');
         document.getElementById('productName').focus();
         return;
     }
 
-    // Find product details from database
     const dbItem = foodDatabase.find(item => item.name.toLowerCase() === name.toLowerCase());
     
     const product = {
@@ -418,13 +593,11 @@ document.getElementById('addItemForm').addEventListener('submit', (e) => {
     renderCart();
     showToast(`✅ ${dbItem.name} added to cart!`);
 
-    // Reset form
     document.getElementById('addItemForm').reset();
     document.getElementById('productQuantity').value = 1;
     document.getElementById('productName').focus();
 });
 
-// Increase quantity
 function increaseQuantity(productId) {
     const items = cart.getAllItems();
     const item = items.find(i => i.id === productId);
@@ -435,7 +608,6 @@ function increaseQuantity(productId) {
     }
 }
 
-// Decrease quantity
 function decreaseQuantity(productId) {
     const items = cart.getAllItems();
     const item = items.find(i => i.id === productId);
@@ -446,7 +618,6 @@ function decreaseQuantity(productId) {
     }
 }
 
-// Delete item
 function deleteItem(productId) {
     if (confirm('Are you sure you want to remove this item?')) {
         cart.deleteItem(productId);
@@ -455,7 +626,6 @@ function deleteItem(productId) {
     }
 }
 
-// Clear cart
 document.getElementById('clearCart').addEventListener('click', () => {
     if (cart.getSize() === 0) {
         showToast('⚠️ Cart is already empty!');
@@ -469,7 +639,6 @@ document.getElementById('clearCart').addEventListener('click', () => {
     }
 });
 
-// Checkout
 document.getElementById('checkoutBtn').addEventListener('click', () => {
     if (cart.getSize() === 0) {
         showToast('⚠️ Your cart is empty!');
@@ -494,7 +663,6 @@ document.getElementById('checkoutBtn').addEventListener('click', () => {
     }
 });
 
-// Modal functionality
 function openVisualizationModal() {
     const modal = document.getElementById('visualizationModal');
     modal.classList.add('show');
@@ -533,13 +701,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup autocomplete
     setupAutoComplete();
     
+    // Browse by Category button
+    document.getElementById('browseCategoryBtn').addEventListener('click', openCategoryModal);
+    
+    // Close category modal
+    document.getElementById('closeCategoryModal').addEventListener('click', closeCategoryModal);
+    
+    // Close BST modal
+    document.getElementById('closeBstModal').addEventListener('click', closeBSTModal);
+    
     // Visualization button
     document.getElementById('visualizeBtn').addEventListener('click', openVisualizationModal);
     
-    // Close modal button
+    // Close visualization modal
     document.getElementById('closeModal').addEventListener('click', closeVisualizationModal);
     
-    // Close modal when clicking outside
+    // Close modals when clicking outside
+    document.getElementById('categoryModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCategoryModal();
+        }
+    });
+    
+    document.getElementById('bstModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeBSTModal();
+        }
+    });
+    
     document.getElementById('visualizationModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeVisualizationModal();

@@ -98,10 +98,22 @@
                 <!-- Add Item Section -->
                 <div class="add-item-section">
                     <h3><i class="fas fa-plus-circle"></i> Add New Item</h3>
+                    
+                    <!-- Browse by Category Button -->
+                    <div class="browse-category-container">
+                        <button class="btn btn-category" id="browseCategoryBtn">
+                            <i class="fas fa-th-large"></i> Browse by Category (BST View)
+                        </button>
+                    </div>
+
+                    <div class="divider-text">
+                        <span>OR</span>
+                    </div>
+
                     <form id="addItemForm" class="add-item-form">
                         <div class="form-group">
                             <label for="productName">Product Name</label>
-                            <input type="text" id="productName" placeholder="e.g., Fresh Oranges" required>
+                            <input type="text" id="productName" placeholder="e.g., Fresh Oranges or search..." required>
                         </div>
                         <div class="form-group">
                             <label for="productPrice">Price (₹)</label>
@@ -202,6 +214,61 @@
             </div>
         </main>
     </section>
+
+    <!-- Category Selection Modal -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content category-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-th-large"></i> Browse by Category</h2>
+                <button class="close-modal" id="closeCategoryModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="categoryGrid" class="category-grid">
+                    <!-- Categories will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BST Visualization Modal -->
+    <div id="bstModal" class="modal">
+        <div class="modal-content bst-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-sitemap"></i> Binary Search Tree View
+                    <div class="modal-subtitle" id="bstCategoryName">Category</div>
+                </h2>
+                <button class="close-modal" id="closeBstModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="bst-info">
+                    <p><strong>Click on any product node to add it to your cart!</strong></p>
+                    <p class="modal-subtitle">Products are organized by price in a Binary Search Tree structure</p>
+                </div>
+                <div id="bstVisualization" class="bst-container">
+                    <!-- BST visualization will be dynamically inserted here -->
+                </div>
+                <div class="bst-legend">
+                    <div class="legend-item">
+                        <div class="legend-indicator root"></div>
+                        <span>Root Node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator left"></div>
+                        <span>Left Child (Lower Price)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-indicator right"></div>
+                        <span>Right Child (Higher Price)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Linked List Visualization Modal -->
     <div id="visualizationModal" class="modal">
@@ -334,7 +401,6 @@
             <span id="toastMessage">Item added to cart!</span>
         </div>
     </div>
-
     <script src="{{ url_for('static', filename='database.js') }}"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
