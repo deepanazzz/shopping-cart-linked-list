@@ -19,6 +19,7 @@
             <nav class="nav">
                 <a href="#" class="nav-link" data-page="home">Home</a>
                 <a href="#" class="nav-link active" data-page="cart">Cart</a>
+                <a href="#" class="nav-link" data-page="orders">Order Tracking</a>
                 <a href="#" class="nav-link" data-page="about">About</a>
             </nav>
             <div class="cart-icon">
@@ -211,6 +212,64 @@
                         <i class="fas fa-project-diagram"></i> Visualize Linked List
                     </button>
                 </div>
+
+                <!-- Recommendations Panel -->
+                <div class="recommendations-panel" id="recommendationsPanel">
+                    <h3><i class="fas fa-star"></i> Recommended for You</h3>
+                    <div id="recommendationsList" class="recommendations-list">
+                        <p class="no-recommendations">Add items to see recommendations!</p>
+                    </div>
+                    <button class="btn btn-graph" id="viewGraphBtn">
+                        <i class="fas fa-network-wired"></i> View Product Network
+                    </button>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- Order Tracking Page -->
+    <section id="ordersPage" class="page-section" style="display: none;">
+        <div class="hero">
+            <div class="container">
+                <h2>Order Tracking</h2>
+                <p class="breadcrumb">
+                    <a href="#" data-page="home">Home</a> / <span>Order Tracking</span>
+                </p>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="container">
+                <div id="noOrdersSection" class="empty-cart" style="margin-top: 2rem;">
+                    <i class="fas fa-receipt"></i>
+                    <p>No orders yet</p>
+                    <p class="empty-subtitle">Place an order to see it in the queue.</p>
+                </div>
+
+                <div id="currentOrderSection" style="display: none;">
+                    <div class="add-item-section" style="margin-bottom: 1.5rem;">
+                        <h3><i class="fas fa-truck"></i> Current Order</h3>
+                        <div id="currentOrderInfo"></div>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 1rem;">
+                            <button class="btn btn-secondary btn-small" id="viewQueueBtn">
+                                <i class="fas fa-list-ol"></i> View Detailed Queue
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="showPage('cart')">
+                                <i class="fas fa-shopping-cart"></i> Back to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="add-item-section">
+                        <h3><i class="fas fa-stream"></i> Queue Visualization</h3>
+                        <div id="queueContainer"></div>
+                    </div>
+                </div>
+
+                <div class="add-item-section" style="margin-top: 1.5rem;">
+                    <h3><i class="fas fa-history"></i> Order History</h3>
+                    <div id="orderHistory"></div>
+                </div>
             </div>
         </main>
     </section>
@@ -225,9 +284,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div id="categoryGrid" class="category-grid">
-                    <!-- Categories will be dynamically inserted here -->
-                </div>
+                <div id="categoryGrid" class="category-grid"></div>
             </div>
         </div>
     </div>
@@ -249,9 +306,7 @@
                     <p><strong>Click on any product node to add it to your cart!</strong></p>
                     <p class="modal-subtitle">Products are organized by price in a Binary Search Tree structure</p>
                 </div>
-                <div id="bstVisualization" class="bst-container">
-                    <!-- BST visualization will be dynamically inserted here -->
-                </div>
+                <div id="bstVisualization" class="bst-container"></div>
                 <div class="bst-legend">
                     <div class="legend-item">
                         <div class="legend-indicator root"></div>
@@ -266,6 +321,89 @@
                         <span>Right Child (Higher Price)</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graph Visualization Modal -->
+    <div id="graphModal" class="modal">
+        <div class="modal-content bst-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-network-wired"></i> Product Network</h2>
+                <button class="close-modal" id="closeGraphModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="bst-info">
+                    <p><strong>Tap a recommended node to add it to your cart.</strong></p>
+                    <p class="modal-subtitle">This network uses a graph of “often bought together” relationships.</p>
+                </div>
+                <div id="graphVisualization" class="bst-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-credit-card"></i> Checkout</h2>
+                <button class="close-modal" id="closeCheckoutModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="bst-info">
+                    <p><strong>Review your items and enter delivery details.</strong></p>
+                </div>
+
+                <div id="checkoutSummary" style="margin-bottom: 1rem;"></div>
+                <div class="summary-row total" style="margin-bottom: 1.5rem;">
+                    <span class="label">Total:</span>
+                    <span class="value" id="checkoutTotal">₹0.00</span>
+                </div>
+
+                <form id="checkoutForm" class="add-item-form">
+                    <div class="form-group">
+                        <label for="customerName">Name</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">Phone</label>
+                        <input type="tel" id="customerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">Address</label>
+                        <input type="text" id="customerAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliveryType">Delivery Type</label>
+                        <select id="deliveryType" required>
+                            <option value="Home Delivery">Home Delivery</option>
+                            <option value="Store Pickup">Store Pickup</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Place Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Details Modal -->
+    <div id="queueModal" class="modal">
+        <div class="modal-content bst-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-list-ol"></i> Queue Details</h2>
+                <button class="close-modal" id="closeQueueModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="queueStats"></div>
+                <div id="queueDetailedView" class="bst-container"></div>
             </div>
         </div>
     </div>
